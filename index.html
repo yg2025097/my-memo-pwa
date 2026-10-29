@@ -1,663 +1,71 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>나만의 캘린더 한 줄 메모장</title>
+  <title>한 줄 메모장</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4CAF50">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <style>
-    :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --danger: #ef4444;
-      --input-bg: #ffffff;
-      --list-item-bg: #f1f5f9;
-      --cal-selected: #e0e7ff;
-    }
-
-    [data-theme="dark"] {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #334155;
-      --primary: #3b82f6;
-      --primary-hover: #60a5fa;
-      --danger: #f87171;
-      --input-bg: #0f172a;
-      --list-item-bg: #0f172a;
-      --cal-selected: #1e3a8a;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 24px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    }
-
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    h1 { font-size: 1.2rem; font-weight: 700; }
-
-    .theme-toggle {
-      background: none;
-      border: 1px solid var(--border-color);
-      font-size: 1rem;
-      cursor: pointer;
-      padding: 5px 10px;
-      border-radius: 8px;
-      color: var(--text-main);
-    }
-
-    .clock-container {
-      text-align: center;
-      margin-bottom: 16px;
-      padding: 12px;
-      background-color: var(--bg-color);
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-    }
-
-    .clock-time {
-      font-size: 1.6rem;
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: var(--primary);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .clock-date {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .calendar-container {
-      margin-bottom: 20px;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 14px;
-      background-color: var(--bg-color);
-    }
-
-    .calendar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .calendar-header h2 { font-size: 1rem; font-weight: 700; }
-
-    .cal-nav-btn {
-      background: none;
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      text-align: center;
-    }
-
-    .cal-day-name {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      padding-bottom: 6px;
-    }
-
-    .cal-day-name.sun { color: var(--danger); }
-    .cal-day-name.sat { color: var(--primary); }
-
-    .cal-cell {
-      padding: 8px 2px;
-      font-size: 0.85rem;
-      border-radius: 8px;
-      cursor: pointer;
-      position: relative;
-      min-height: 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-    }
-
-    .cal-cell:hover:not(.empty) { background-color: var(--border-color); }
-
-    .cal-cell.selected {
-      background-color: var(--cal-selected);
-      font-weight: bold;
-      border: 1px solid var(--primary);
-    }
-
-    .cal-cell.today .num { color: var(--primary); font-weight: 800; }
-
-    .dot {
-      width: 6px;
-      height: 6px;
-      background-color: var(--danger);
-      border-radius: 50%;
-      margin-top: 3px;
-    }
-
-    .selected-date-banner {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 8px;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      font-size: 1rem;
-      background-color: var(--input-bg);
-      color: var(--text-main);
-      outline: none;
-    }
-
-    input[type="text"]:focus { border-color: var(--primary); }
-
-    button.send-btn {
-      width: 100%;
-      padding: 12px;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    button.send-btn:hover { background-color: var(--primary-hover); }
-    button.send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .status-msg {
-      font-size: 0.85rem;
-      text-align: center;
-      min-height: 18px;
-      margin-bottom: 12px;
-    }
-    .status-msg.success { color: #10b981; }
-    .status-msg.error { color: #ef4444; }
-
-    .memo-section-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .list-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .select-all-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .batch-delete-btn {
-      background: none;
-      border: 1px solid var(--danger);
-      color: var(--danger);
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      display: none;
-    }
-
-    .batch-delete-btn:hover { background-color: var(--danger); color: white; }
-
-    .memo-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 240px;
-      overflow-y: auto;
-      padding-right: 2px;
-    }
-
-    .memo-item {
-      background-color: var(--list-item-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
-    .memo-checkbox {
-      margin-top: 3px;
-      cursor: pointer;
-      width: 16px;
-      height: 16px;
-    }
-
-    .memo-body { flex: 1; word-break: break-all; }
-    .memo-text { font-size: 0.95rem; font-weight: 500; margin-bottom: 4px; }
-    .memo-time { font-size: 0.75rem; color: var(--text-muted); }
-
-    .item-delete-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 0.9rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-    .item-delete-btn:hover { color: var(--danger); background-color: rgba(239, 68, 68, 0.1); }
-
-    .empty-msg {
-      text-align: center;
-      padding: 20px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
+    body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
+    .input-group { display: flex; gap: 8px; margin-top: 15px; }
+    input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 10px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:disabled { background-color: #ccc; }
+    #status { margin-top: 10px; font-size: 13px; color: #666; }
   </style>
 </head>
 <body>
-
-  <div class="card">
-    <div class="header-row">
-      <h1>나만의 캘린더 메모장</h1>
-      <button class="theme-toggle" id="themeBtn">🌙 다크</button>
-    </div>
-
-    <div class="clock-container">
-      <div class="clock-time" id="clockTime">00:00:00</div>
-      <div class="clock-date" id="clockDate">0000년 00월 00일</div>
-    </div>
-
-    <div class="calendar-container">
-      <div class="calendar-header">
-        <button class="cal-nav-btn" onclick="changeMonth(-1)">❮</button>
-        <h2 id="calMonthYear">0000년 0월</h2>
-        <button class="cal-nav-btn" onclick="changeMonth(1)">❯</button>
-      </div>
-      <div class="calendar-grid" id="calendarGrid"></div>
-    </div>
-
-    <div class="selected-date-banner" id="selectedDateBanner">선택된 날짜: 오늘</div>
-    <div class="input-group">
-      <input type="text" id="memoInput" placeholder="선택한 날짜에 기록할 메모..." onkeydown="if(event.key==='Enter') sendMemo()">
-      <button class="send-btn" id="sendBtn" onclick="sendMemo()">메모 등록하기</button>
-    </div>
-
-    <div class="status-msg" id="statusMsg"></div>
-
-    <div class="memo-section-title">
-      <div class="list-controls">
-        <label class="select-all-label" id="selectAllContainer" style="display: none;">
-          <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"> 전체 선택
-        </label>
-        <span id="memoCount">메모 0개</span>
-      </div>
-      <button class="batch-delete-btn" id="batchDeleteBtn" onclick="deleteSelectedMemos()">선택 삭제 (0)</button>
-    </div>
-
-    <div class="memo-list" id="memoList">
-      <div class="empty-msg">메모를 불러오는 중...</div>
-    </div>
+  <h3>📝 나만의 한 줄 메모장 (PWA)</h3>
+  <div class="input-group">
+    <input type="text" id="memoInput" placeholder="메모할 내용을 입력하세요">
+    <button id="sendBtn" onclick="sendMemo()">전송</button>
   </div>
+  <div id="status"></div>
 
   <script>
-    let allMemos = [];
-    let currentDate = new Date();
-    let selectedDateStr = formatDate(new Date());
-
-    function formatDate(dateObj) {
-      const y = dateObj.getFullYear();
-      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const d = String(dateObj.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
+    // 1. 서비스 워커 등록
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker Registered'));
     }
 
-    // 1. 디지털 시계
-    function updateClock() {
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const date = String(now.getDate()).padStart(2, '0');
-      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-      const day = dayNames[now.getDay()];
+    // 2. 구글 앱 스크립트 웹 앱 URL 붙여넣기
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxzKH1rtaSdykiqY0uha3Fajk8veTtcNi9-HGH1jtBj7QljSDGpuRBLQrZHEFT3z5OCKw/exec";
 
-      document.getElementById('clockTime').innerText = `${hours}:${minutes}:${seconds}`;
-      document.getElementById('clockDate').innerText = `${year}년 ${month}월 ${date}일 (${day})`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // 2. 다크 모드
-    const themeBtn = document.getElementById('themeBtn');
-    const savedTheme = localStorage.getItem('theme') || 
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
-    function setTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      themeBtn.innerText = theme === 'dark' ? '☀️ 라이트' : '🌙 다크';
-      localStorage.setItem('theme', theme);
-    }
-    setTheme(savedTheme);
-
-    themeBtn.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      setTheme(currentTheme === 'dark' ? 'light' : 'dark');
-    });
-
-    // 3. 페이지 데이터 최초 로드
-    window.addEventListener('load', () => {
-      document.getElementById('selectedDateBanner').innerText = `선택된 날짜: ${selectedDateStr}`;
-      loadAllMemos();
-    });
-
-    function loadAllMemos() {
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res.success) {
-            allMemos = res.memos || [];
-            renderCalendar();
-            renderMemoList();
-          } else {
-            document.getElementById('memoList').innerHTML = `<div class="empty-msg">${res.message}</div>`;
-          }
-        })
-        .withFailureHandler(function(err) {
-          document.getElementById('memoList').innerHTML = `<div class="empty-msg">불러오기 실패: ${err.message}</div>`;
-        })
-        .getAllMemos();
-    }
-
-    // 4. 달력 그리기
-    function renderCalendar() {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-
-      document.getElementById('calMonthYear').innerText = `${year}년 ${month + 1}월`;
-
-      const grid = document.getElementById('calendarGrid');
-      grid.innerHTML = '';
-
-      const days = ['일', '월', '화', '수', '목', '금', '토'];
-      days.forEach((day, idx) => {
-        const dayClass = idx === 0 ? 'sun' : (idx === 6 ? 'sat' : '');
-        grid.innerHTML += `<div class="cal-day-name ${dayClass}">${day}</div>`;
-      });
-
-      const firstDayIndex = new Date(year, month, 1).getDay();
-      const lastDate = new Date(year, month + 1, 0).getDate();
-      const todayStr = formatDate(new Date());
-
-      // 달력 시작 빈 셀
-      for (let i = 0; i < firstDayIndex; i++) {
-        grid.innerHTML += `<div class="cal-cell empty"></div>`;
-      }
-
-      // 메모 등록 날짜 집합
-      const memoDatesSet = new Set(allMemos.map(m => m.date));
-
-      // 날짜 생성
-      for (let d = 1; d <= lastDate; d++) {
-        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const isSelected = dateString === selectedDateStr ? 'selected' : '';
-        const isToday = dateString === todayStr ? 'today' : '';
-        const hasMemo = memoDatesSet.has(dateString);
-
-        const cell = document.createElement('div');
-        cell.className = `cal-cell ${isSelected} ${isToday}`;
-        cell.onclick = () => selectDate(dateString);
-        cell.innerHTML = `<span class="num">${d}</span>${hasMemo ? '<div class="dot"></div>' : ''}`;
-        
-        grid.appendChild(cell);
-      }
-    }
-
-    function changeMonth(delta) {
-      currentDate.setMonth(currentDate.getMonth() + delta);
-      renderCalendar();
-    }
-
-    function selectDate(dateStr) {
-      selectedDateStr = dateStr;
-      document.getElementById('selectedDateBanner').innerText = `선택된 날짜: ${dateStr}`;
-      renderCalendar();
-      renderMemoList();
-    }
-
-    // 5. 메모 목록 렌더링
-    function renderMemoList() {
-      const listContainer = document.getElementById('memoList');
-      const countLabel = document.getElementById('memoCount');
-      const selectAllContainer = document.getElementById('selectAllContainer');
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-
-      selectAllCheckbox.checked = false;
-
-      // 선택된 날짜 메모 필터링
-      const filteredMemos = allMemos.filter(m => m.date === selectedDateStr);
-      countLabel.innerText = `${selectedDateStr} (${filteredMemos.length}개)`;
-
-      if (filteredMemos.length === 0) {
-        listContainer.innerHTML = `<div class="empty-msg">${selectedDateStr}에 기록된 메모가 없습니다.</div>`;
-        selectAllContainer.style.display = 'none';
-        updateBatchDeleteBtn();
-        return;
-      }
-
-      selectAllContainer.style.display = 'flex';
-
-      listContainer.innerHTML = filteredMemos.map(memo => `
-        <div class="memo-item">
-          <input type="checkbox" class="memo-checkbox" value="${memo.rowIndex}" onchange="updateBatchDeleteBtn()">
-          <div class="memo-body">
-            <div class="memo-text">${escapeHtml(memo.content)}</div>
-            <div class="memo-time">${memo.time}</div>
-          </div>
-          <button class="item-delete-btn" onclick="deleteMemo(${memo.rowIndex})" title="삭제">✕</button>
-        </div>
-      `).join('');
-
-      updateBatchDeleteBtn();
-    }
-
-    function escapeHtml(text) {
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    // 6. 전체 선택 / 해제
-    function toggleSelectAll(master) {
-      const checkboxes = document.querySelectorAll('.memo-checkbox');
-      checkboxes.forEach(cb => cb.checked = master.checked);
-      updateBatchDeleteBtn();
-    }
-
-    // 7. 일괄 삭제 버튼 제어
-    function updateBatchDeleteBtn() {
-      const checkedBoxes = document.querySelectorAll('.memo-checkbox:checked');
-      const batchBtn = document.getElementById('batchDeleteBtn');
-      const totalBoxes = document.querySelectorAll('.memo-checkbox');
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-
-      if (totalBoxes.length > 0 && checkedBoxes.length === totalBoxes.length) {
-        selectAllCheckbox.checked = true;
-      } else {
-        selectAllCheckbox.checked = false;
-      }
-
-      if (checkedBoxes.length > 0) {
-        batchBtn.style.display = 'inline-block';
-        batchBtn.innerText = `선택 삭제 (${checkedBoxes.length})`;
-      } else {
-        batchBtn.style.display = 'none';
-      }
-    }
-
-    // 8. 메모 등록
-    function sendMemo() {
+    async function sendMemo() {
       const input = document.getElementById('memoInput');
       const btn = document.getElementById('sendBtn');
-      const status = document.getElementById('statusMsg');
+      const status = document.getElementById('status');
       const text = input.value.trim();
 
-      if (!text) {
-        status.className = 'status-msg error';
-        status.innerText = '메모 내용을 입력해주세요.';
-        return;
-      }
+      if (!text) return alert('내용을 입력하세요.');
 
       btn.disabled = true;
-      btn.innerText = '등록 중...';
-      status.innerText = '';
+      status.innerText = '저장 중...';
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          btn.disabled = false;
-          btn.innerText = '메모 등록하기';
-          if (res.success) {
-            input.value = '';
-            status.className = 'status-msg success';
-            status.innerText = '저장되었습니다!';
-            allMemos = res.memos || [];
-            renderCalendar();
-            renderMemoList();
-            setTimeout(() => { status.innerText = ''; }, 2500);
-          } else {
-            status.className = 'status-msg error';
-            status.innerText = res.message;
-          }
-        })
-        .withFailureHandler(function(err) {
-          btn.disabled = false;
-          btn.innerText = '메모 등록하기';
-          status.className = 'status-msg error';
-          status.innerText = '오류: ' + err.message;
-        })
-        .saveMemo(text, selectedDateStr);
-    }
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ memo: text })
+        });
 
-    // 9. 개별 삭제
-    function deleteMemo(rowIndex) {
-      if (!confirm('이 메모를 삭제하시겠습니까?')) return;
+        // 서버(GAS)가 돌려준 결과를 확인해서 실패하면 오류로 처리
+        const result = await res.json();
+        if (result.result !== 'success') {
+          throw new Error(result.message || '서버 오류');
+        }
 
-      const status = document.getElementById('statusMsg');
-      
-      google.script.run
-        .withSuccessHandler(function(res) {
-          status.className = 'status-msg success';
-          status.innerText = '삭제되었습니다.';
-          allMemos = res.memos || [];
-          renderCalendar();
-          renderMemoList();
-          setTimeout(() => { status.innerText = ''; }, 2500);
-        })
-        .withFailureHandler(function(err) {
-          status.className = 'status-msg error';
-          status.innerText = '삭제 실패: ' + err.message;
-        })
-        .deleteMemoByRow(rowIndex);
-    }
-
-    // 10. 일괄 삭제
-    function deleteSelectedMemos() {
-      const checkedBoxes = document.querySelectorAll('.memo-checkbox:checked');
-      const rowIndices = Array.from(checkedBoxes).map(cb => cb.value);
-
-      if (rowIndices.length === 0) return;
-
-      if (!confirm(`선택한 ${rowIndices.length}개의 메모를 정말로 삭제하시겠습니까?`)) return;
-
-      const status = document.getElementById('statusMsg');
-      const batchBtn = document.getElementById('batchDeleteBtn');
-      batchBtn.disabled = true;
-      batchBtn.innerText = '삭제 중...';
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          batchBtn.disabled = false;
-          status.className = 'status-msg success';
-          status.innerText = `${rowIndices.length}개의 메모가 삭제되었습니다.`;
-          allMemos = res.memos || [];
-          renderCalendar();
-          renderMemoList();
-          setTimeout(() => { status.innerText = ''; }, 2500);
-        })
-        .withFailureHandler(function(err) {
-          batchBtn.disabled = false;
-          status.className = 'status-msg error';
-          status.innerText = '일괄 삭제 실패: ' + err.message;
-        })
-        .deleteSelectedMemos(rowIndices);
+        input.value = '';
+        status.innerText = '✅ 성공적으로 저장되었습니다!';
+        setTimeout(() => { status.innerText = ''; }, 2000);
+      } catch (err) {
+        status.innerText = '❌ 저장 실패: ' + err.message;
+      } finally {
+        btn.disabled = false;
+      }
     }
   </script>
 </body>
